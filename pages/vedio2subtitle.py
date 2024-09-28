@@ -86,8 +86,8 @@ def yt_dlp_download(yt_url:str, output_path:str = None) -> str:
             result = ydl.extract_info(yt_url, download=True)
             file_name = ydl.prepare_filename(result)
             mp4_file_path = file_name.rsplit('.', 1)[0] + '.mp4'
-            st.info(f"yt_dlp_download saved YouTube video to file path: {mp4_file_path}")
-            st.write(mp4_file_path)
+            # st.info(f"yt_dlp_download saved YouTube video to file path: {mp4_file_path}")
+            # st.write(mp4_file_path)
             return mp4_file_path
     except yt_dlp.utils.DownloadError as e:
         st.error(f"yt_dlp_download failed to download audio from URL {yt_url}: {e}")
@@ -360,11 +360,12 @@ youtube_link = st.text_input("Enter YouTube Video Link")
 youtube_video_file_path=""
 if youtube_link:
     youtube_url_pattern = r'^(https?://)?(www\.)?(youtube\.com|youtu\.be)/.+$'
+    # st.write("Youtube video link: ",youtube_link)
     if not re.match(youtube_url_pattern, youtube_link):
         st.error(f"Invalid YouTube URL: {youtube_link}")
         # raise ValueError("Invalid YouTube URL provided.")
-    else:
-        st.write("Link OK")
+    # else:
+    #     st.write("Link OK")
 
     
     try:
@@ -373,7 +374,11 @@ if youtube_link:
         st.error(f"generate_youtube_transcript_with_groq failed to download YouTube video from URL {youtube_link}: {e}")
         st.error(traceback.format_exc())
 
-    st.video(youtube_video_file_path)
+    # st.video(youtube_video_file_path)
+
+    # --------------------------------------------------------------------------------------
+    
+    # --------------------------------------------------------------------------------------
     
     # chunk_size=5*60000
     # temp_dir = "temp_chunks"
@@ -414,7 +419,9 @@ if youtube_link:
     #         st.error(error_message)
     #         st.error(traceback.format_exc())
     #         # raise error_message
-    st.write("Youtube video links: ",youtube_link)
+
+
+
 
 
 selected_lang_tar = st.selectbox("Select the Target language for Subtitle", ['afrikaans', 'albanian', 'amharic', 'arabic', 'armenian', 'azerbaijani', 'basque', 'belarusian', 'bengali', 'bosnian', 'bulgarian', 'catalan', 'cebuano', 'chichewa', 'chinese (simplified)', 'chinese (traditional)', 'corsican', 'croatian', 'czech', 'danish', 'dutch', 'english', 'esperanto', 'estonian', 'filipino', 'finnish', 'french', 'frisian', 'galician', 'georgian', 'german', 'greek', 'gujarati', 'haitian creole', 'hausa', 'hawaiian', 'hebrew', 'hebrew', 'hindi', 'hmong', 'hungarian', 'icelandic', 'igbo', 'indonesian', 'irish', 'italian', 'japanese', 'javanese', 'kannada', 'kazakh', 'khmer', 'korean', 'kurdish (kurmanji)', 'kyrgyz', 'lao', 'latin', 'latvian', 'lithuanian', 'luxembourgish', 'macedonian', 'malagasy', 'malay', 'malayalam', 'maltese', 'maori', 'marathi', 'mongolian', 'myanmar (burmese)', 'nepali', 'norwegian', 'odia', 'pashto', 'persian', 'polish', 'portuguese', 'punjabi', 'romanian', 'russian', 'samoan', 'scots gaelic', 'serbian', 'sesotho', 'shona', 'sindhi', 'sinhala', 'slovak', 'slovenian', 'somali', 'spanish', 'sundanese', 'swahili', 'swedish', 'tajik', 'tamil', 'telugu', 'thai', 'turkish', 'ukrainian', 'urdu', 'uyghur', 'uzbek', 'vietnamese', 'welsh', 'xhosa', 'yiddish', 'yoruba', 'zulu'])
@@ -531,43 +538,43 @@ if st.button("Generate Subtitle"):
         st.error("Please upload an audio file.")
 
 if st.button("Generate Youtube Vedio Subtitle"):
-    if youtube_vedio_file_name:
-        st.video(youtube_vedio_file_name)
-        # audio_file = video2mp3(youtube_vedio_file_name)
-        # audio_buffer = get_audio_buffer(audio_file)
-        # audio = AudioSegment.from_file(audio_buffer)
-        # audio = audio.set_channels(1)
-        # audio = audio.set_frame_rate(16000)
+    if youtube_video_file_path:
+        # st.video(youtube_video_file_path)
+        audio_file = video2mp3(youtube_video_file_path)
+        audio_buffer = get_audio_buffer(audio_file)
+        audio = AudioSegment.from_file(audio_buffer)
+        audio = audio.set_channels(1)
+        audio = audio.set_frame_rate(16000)
 
-        # chunk_duration_ms = 3000  
-        # chunks = [audio[i:i + chunk_duration_ms] for i in range(0, len(audio), chunk_duration_ms)]
+        chunk_duration_ms = 3000  
+        chunks = [audio[i:i + chunk_duration_ms] for i in range(0, len(audio), chunk_duration_ms)]
 
-        # full_transcription = ""
-        # full_translation = ""
+        full_transcription = ""
+        full_translation = ""
 
-        # filename = f"chunk.wav"
-        # audio.export(filename, format="wav")
-        # with open(filename, "rb") as file:
-        #     transcription = client.audio.transcriptions.create(
-        #         file=(filename, file.read()),
-        #         model="whisper-large-v3",
-        #         prompt="transcribe",
-        #         response_format="verbose_json",
-        #         temperature=0.0
-        #     )
-        # transcription_segment = transcription.segments
-        # translation_segment = copy.deepcopy(transcription_segment)
+        filename = f"chunk.wav"
+        audio.export(filename, format="wav")
+        with open(filename, "rb") as file:
+            transcription = client.audio.transcriptions.create(
+                file=(filename, file.read()),
+                model="whisper-large-v3",
+                prompt="transcribe",
+                response_format="verbose_json",
+                temperature=0.0
+            )
+        transcription_segment = transcription.segments
+        translation_segment = copy.deepcopy(transcription_segment)
         
-        # for seg in translation_segment:
-        #     seg['text'] = translate_text(seg['text'], selected_lang_tar)
+        for seg in translation_segment:
+            seg['text'] = translate_text(seg['text'], selected_lang_tar)
 
-        # subtitle_file = "output_subtitle.vtt"
-        # write_vtt(translation_segment, subtitle_file)
+        subtitle_youtube_file = "output_subtitle.vtt"
+        write_vtt(translation_segment, subtitle_file)
 
-        # output_video = "output_video_with_subtitles.mp4"
-        # add_subtitles_to_video(vedio_file_name, subtitle_file, output_video, get_font_for_language(selected_lang_tar))
+        output_youtube_video = "output_video_with_subtitles.mp4"
+        add_subtitles_to_video(youtube_video_file_path, subtitle_youtube_file, output_youtube_video, get_font_for_language(selected_lang_tar))
 
-        # st.video(output_video)
+        st.video(output_youtube_video)
 
     else:
         st.error("Please upload a video file or provide a YouTube link.")
