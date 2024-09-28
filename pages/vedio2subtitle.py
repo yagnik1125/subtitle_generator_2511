@@ -30,19 +30,8 @@ import yt_dlp
 import re
 import traceback
 
-
-
 # Initialize the Groq client
 client = Groq(api_key="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")
-
-# # Define a class to handle video streaming
-# class VideoTransformer(VideoTransformerBase):
-#     def __init__(self):
-#         self.frames = []
-    
-#     def transform(self, frame):
-#         self.frames.append(frame)
-#         return frame
 
 # Streamlit frontend for audio input and translation
 st.title("Subtitle Generator App")
@@ -257,7 +246,8 @@ def get_font_for_language(language):
         'georgian': 'Noto Sans Georgian',
         'german': 'Roboto',
         'greek': 'Noto Sans Greek',
-        'gujarati': 'Shruti',  # Custom font for Gujarati
+        # 'gujarati': 'Shruti',  # Custom font for Gujarati
+        'gujarati': 'Noto Sans Gujarati',  # Custom font for Gujarati
         'haitian creole': 'Roboto',
         'hausa': 'Roboto',
         'hawaiian': 'Roboto',
@@ -358,67 +348,67 @@ youtube_link = st.text_input("Enter YouTube Video Link")
 
 # Download and process YouTube video if the link is provided
 youtube_video_file_path=""
-if youtube_link:
-    youtube_url_pattern = r'^(https?://)?(www\.)?(youtube\.com|youtu\.be)/.+$'
-    # st.write("Youtube video link: ",youtube_link)
-    if not re.match(youtube_url_pattern, youtube_link):
-        st.error(f"Invalid YouTube URL: {youtube_link}")
-        # raise ValueError("Invalid YouTube URL provided.")
-    # else:
-    #     st.write("Link OK")
+# if youtube_link:
+#     youtube_url_pattern = r'^(https?://)?(www\.)?(youtube\.com|youtu\.be)/.+$'
+#     # st.write("Youtube video link: ",youtube_link)
+#     if not re.match(youtube_url_pattern, youtube_link):
+#         st.error(f"Invalid YouTube URL: {youtube_link}")
+#         # raise ValueError("Invalid YouTube URL provided.")
+#     # else:
+#     #     st.write("Link OK")
 
     
-    try:
-        youtube_video_file_path = yt_dlp_download(youtube_link)
-    except Exception as e:
-        st.error(f"generate_youtube_transcript_with_groq failed to download YouTube video from URL {youtube_link}: {e}")
-        st.error(traceback.format_exc())
+#     try:
+#         youtube_video_file_path = yt_dlp_download(youtube_link)
+#     except Exception as e:
+#         st.error(f"generate_youtube_transcript_with_groq failed to download YouTube video from URL {youtube_link}: {e}")
+#         st.error(traceback.format_exc())
 
-    # st.video(youtube_video_file_path)
+#     # st.video(youtube_video_file_path)
 
-    # --------------------------------------------------------------------------------------
+#     # --------------------------------------------------------------------------------------
     
-    # --------------------------------------------------------------------------------------
+#     # --------------------------------------------------------------------------------------
     
-    # chunk_size=5*60000
-    # temp_dir = "temp_chunks"
-    # chunk_files=[]
-    # try:
-    #     chunk_files = create_audio_chunks(file_path, chunk_size, temp_dir)
-    # except Exception as e:
-    #     error_message = f"generate_youtube_transcript_with_groq failed to create audio chunks from file {file_path}: {e}"
-    #     st.error(error_message)
-    #     st.error(traceback.format_exc())
-    #     # raise error_message
+#     # chunk_size=5*60000
+#     # temp_dir = "temp_chunks"
+#     # chunk_files=[]
+#     # try:
+#     #     chunk_files = create_audio_chunks(file_path, chunk_size, temp_dir)
+#     # except Exception as e:
+#     #     error_message = f"generate_youtube_transcript_with_groq failed to create audio chunks from file {file_path}: {e}"
+#     #     st.error(error_message)
+#     #     st.error(traceback.format_exc())
+#     #     # raise error_message
 
-    # transcripts = []
-    # translations = []
-    # for file_name in chunk_files:
-    #     try:
-    #         st.info(f"Transcribing {file_name}")
-    #         filename = f"chunk.wav"
-    #         file_name.export(filename, format="wav")
-    #         with open(filename, "rb") as file:
-    #             transcription = client.audio.transcriptions.create(
-    #                 file=(filename, file.read()),  # Required audio file
-    #                 model="whisper-large-v3",  # Required model for transcription
-    #                 prompt="transcribe",
-    #                 response_format="verbose_json",  # Optional
-    #                 temperature=0.0  # Optional
-    #             )
-    #         # Append the chunk transcription to full transcription
-    #         transcription_segment=transcription.segments
-    #         translation_segment=copy.deepcopy(transcription_segment)
-    #         # transcript = transcribe_with_groq(file_name)
-    #         # transcripts.append(transcript)
-    #         # translation = translate_with_groq(transcript, "English")
-    #         # translations.append(translation)
+#     # transcripts = []
+#     # translations = []
+#     # for file_name in chunk_files:
+#     #     try:
+#     #         st.info(f"Transcribing {file_name}")
+#     #         filename = f"chunk.wav"
+#     #         file_name.export(filename, format="wav")
+#     #         with open(filename, "rb") as file:
+#     #             transcription = client.audio.transcriptions.create(
+#     #                 file=(filename, file.read()),  # Required audio file
+#     #                 model="whisper-large-v3",  # Required model for transcription
+#     #                 prompt="transcribe",
+#     #                 response_format="verbose_json",  # Optional
+#     #                 temperature=0.0  # Optional
+#     #             )
+#     #         # Append the chunk transcription to full transcription
+#     #         transcription_segment=transcription.segments
+#     #         translation_segment=copy.deepcopy(transcription_segment)
+#     #         # transcript = transcribe_with_groq(file_name)
+#     #         # transcripts.append(transcript)
+#     #         # translation = translate_with_groq(transcript, "English")
+#     #         # translations.append(translation)
             
-    #     except Exception as e:
-    #         error_message = f"generate_youtube_transcript_with_groq failed to transcribe file {file_name}: {e}"
-    #         st.error(error_message)
-    #         st.error(traceback.format_exc())
-    #         # raise error_message
+#     #     except Exception as e:
+#     #         error_message = f"generate_youtube_transcript_with_groq failed to transcribe file {file_name}: {e}"
+#     #         st.error(error_message)
+#     #         st.error(traceback.format_exc())
+#     #         # raise error_message
 
 
 
@@ -538,7 +528,22 @@ if st.button("Generate Subtitle"):
         st.error("Please upload an audio file.")
 
 if st.button("Generate Youtube Vedio Subtitle"):
-    if youtube_video_file_path:
+    if youtube_link:
+        youtube_url_pattern = r'^(https?://)?(www\.)?(youtube\.com|youtu\.be)/.+$'
+        # st.write("Youtube video link: ",youtube_link)
+        if not re.match(youtube_url_pattern, youtube_link):
+            st.error(f"Invalid YouTube URL: {youtube_link}")
+            # raise ValueError("Invalid YouTube URL provided.")
+        # else:
+        #     st.write("Link OK")
+
+
+        try:
+            youtube_video_file_path = yt_dlp_download(youtube_link)
+        except Exception as e:
+            st.error(f"generate_youtube_transcript_with_groq failed to download YouTube video from URL {youtube_link}: {e}")
+            st.error(traceback.format_exc())
+
         # st.video(youtube_video_file_path)
         audio_file = video2mp3(youtube_video_file_path)
         audio_buffer = get_audio_buffer(audio_file)
