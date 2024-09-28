@@ -85,8 +85,9 @@ def yt_dlp_download(yt_url:str, output_path:str = None) -> str:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             result = ydl.extract_info(yt_url, download=True)
             file_name = ydl.prepare_filename(result)
-            mp4_file_path = file_name.rsplit('.', 1)[0] + '.mp3'
+            mp4_file_path = file_name.rsplit('.', 1)[0] + '.mp4'
             st.info(f"yt_dlp_download saved YouTube video to file path: {mp4_file_path}")
+            st.write(mp4_file_path)
             return mp4_file_path
     except yt_dlp.utils.DownloadError as e:
         st.error(f"yt_dlp_download failed to download audio from URL {yt_url}: {e}")
