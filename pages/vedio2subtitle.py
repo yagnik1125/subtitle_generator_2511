@@ -569,7 +569,7 @@ if st.button("Generate Youtube Vedio Subtitle"):
             seg['text'] = translate_text(seg['text'], selected_lang_tar)
 
         subtitle_youtube_file = "output_subtitle.vtt"
-        write_vtt(translation_segment, subtitle_file)
+        write_vtt(translation_segment, subtitle_youtube_file)
 
         output_youtube_video = "output_video_with_subtitles.mp4"
         add_subtitles_to_video(youtube_video_file_path, subtitle_youtube_file, output_youtube_video, get_font_for_language(selected_lang_tar))
