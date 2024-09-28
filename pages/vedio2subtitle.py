@@ -64,24 +64,21 @@ def yt_dlp_download(yt_url:str, output_path:str = None) -> str:
         output_path = os.getcwd()
 
     ydl_opts = {
-        'format': 'bestvideo/best',
-        'postprocessors': [{
-            'key': 'FFmpegExtractVideoPP',
-            'preferredcodec': 'mp4',#aaya pela mp3 hatu etle vedio noto aavto
-            'preferredquality': '192',
-        }],
-        'outtmpl': os.path.join(output_path, '%(title)s.%(ext)s'),
-
-        # 'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4',  # Download best video and audio, merge into mp4
-        # 'outtmpl': os.path.join(output_path, '%(title)s.%(ext)s'),
+        # 'format': 'bestaudio/best',
         # 'postprocessors': [{
-        #     'key': 'FFmpegVideoConvertor',
-        #     'preferedformat': 'mp4',  # Ensure output is in mp4 format
+        #     'key': 'FFmpegExtractAudio',
+        #     'preferredcodec': 'mp3',#aaya pela mp3 hatu etle vedio noto aavto
+        #     'preferredquality': '192',
         # }],
+        # 'outtmpl': os.path.join(output_path, '%(title)s.%(ext)s'),
 
-        # 'format': 'bestvideo+bestaudio/best',  # Download the best video and audio available
-        # 'merge_output_format': 'mp4',  # Ensure video and audio are merged in mp4 format
-        # 'outtmpl': os.path.join(output_path, '%(title)s.%(ext)s'),  # Output template
+        'format': 'bestvideo+bestaudio/best',  # Get the best video and audio
+        'merge_output_format': 'mp4',  # Ensure the output is merged into mp4
+        'outtmpl': os.path.join(output_path, '%(title)s.%(ext)s'),  # Set output filename template
+        'postprocessors': [{
+            'key': 'FFmpegVideoConvertor',
+            'preferedformat': 'mp4',  # Convert to mp4 if needed
+        }],
     }
 
     try:
