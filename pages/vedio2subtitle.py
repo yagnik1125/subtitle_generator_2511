@@ -429,8 +429,8 @@ if st.button("Generate Subtitle"):
         audio = audio.set_channels(1)  # Ensure mono channel
         audio = audio.set_frame_rate(16000)  # Ensure frame rate is 16000 Hz
 
-        # Split the audio into chunks (30 sec per chunk)
-        chunk_duration_ms = 30000  
+        # Split the audio into chunks (60 sec per chunk)
+        chunk_duration_ms = 60000  
         chunks = [audio[i:i + chunk_duration_ms] for i in range(0, len(audio), chunk_duration_ms)]
 
         # Variables to store full transcription and translation
