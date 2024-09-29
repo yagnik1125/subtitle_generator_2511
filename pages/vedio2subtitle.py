@@ -491,6 +491,8 @@ if st.button("Generate Subtitle"):
             for seg in translation_segment:
                 # st.write(seg['text'])
                 seg['text']=translate_text(seg['text'], selected_lang_tar)
+                seg['start']=seg['start']+((chunk_duration_ms/1000)*i)
+                seg['end']=seg['end']+((chunk_duration_ms/1000)*i)
                 # seg['text']=translate_text(seg['text'], 'english')
             full_translation_segments.extend(translation_segment)
 
