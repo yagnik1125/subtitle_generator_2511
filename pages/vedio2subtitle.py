@@ -540,30 +540,62 @@ if st.button("Generate Youtube Vedio Subtitle"):
         audio = audio.set_channels(1)
         audio = audio.set_frame_rate(16000)
 
-        chunk_duration_ms = 3000  
+        chunk_duration_ms = 30000  
         chunks = [audio[i:i + chunk_duration_ms] for i in range(0, len(audio), chunk_duration_ms)]
 
         full_transcription = ""
         full_translation = ""
 
-        filename = f"chunk.wav"
-        audio.export(filename, format="wav")
-        with open(filename, "rb") as file:
-            transcription = client.audio.transcriptions.create(
-                file=(filename, file.read()),
-                model="whisper-large-v3",
-                prompt="transcribe",
-                response_format="verbose_json",
-                temperature=0.0
-            )
-        transcription_segment = transcription.segments
-        translation_segment = copy.deepcopy(transcription_segment)
-        
-        for seg in translation_segment:
-            seg['text'] = translate_text(seg['text'], selected_lang_tar)
+        # # -----------------------------without chunk start--------------------------------------
 
+        # filename = f"chunk.wav"
+        # audio.export(filename, format="wav")
+        # with open(filename, "rb") as file:
+        #     transcription = client.audio.transcriptions.create(
+        #         file=(filename, file.read()),
+        #         model="whisper-large-v3",
+        #         prompt="transcribe",
+        #         response_format="verbose_json",
+        #         temperature=0.0
+        #     )
+        # transcription_segment = transcription.segments
+        # translation_segment = copy.deepcopy(transcription_segment)
+        
+        # for seg in translation_segment:
+        #     seg['text'] = translate_text(seg['text'], selected_lang_tar)
+
+        # # -----------------------------without chunk end--------------------------------------
+
+        # -----------------------------with chunk start-------------------------------------
+        full_transcription_segments=[]
+        full_translation_segments=[]
+        # Process each chunk
+        for i, chunk in enumerate(chunks):
+            # Save the chunk to a temporary file
+            chunk_filename = f"chunk_{i}.wav"
+            chunk.export(chunk_filename, format="wav")
+
+            # Transcribe the chunk using Groq API
+            with open(chunk_filename, "rb") as file:
+                transcription = client.audio.transcriptions.create(
+                    file=(chunk_filename, file.read()),  # Required audio file
+                    model="whisper-large-v3",  # Required model for transcription
+                    prompt="Transcribe",
+                    response_format="verbose_json",  # Optional
+                    temperature=0.0  # Optional
+                )
+
+            transcription_segment=transcription.segments
+            full_transcription_segments.extend(transcription_segment)
+            translation_segment=copy.deepcopy(transcription_segment)
+            for seg in translation_segment:
+                # st.write(seg['text'])
+                seg['text']=translate_text(seg['text'], selected_lang_tar)
+                # seg['text']=translate_text(seg['text'], 'english')
+            full_translation_segments.extend(translation_segment)
+        # -----------------------------with chunk end-------------------------------------
         subtitle_youtube_file = "output_subtitle.vtt"
-        write_vtt(translation_segment, subtitle_youtube_file)
+        write_vtt(full_translation_segments, subtitle_youtube_file)
 
         output_youtube_video = "output_video_with_subtitles.mp4"
         add_subtitles_to_video(youtube_video_file_path, subtitle_youtube_file, output_youtube_video, get_font_for_language(selected_lang_tar))
