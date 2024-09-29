@@ -348,21 +348,21 @@ youtube_link = st.text_input("Enter YouTube Video Link")
 
 # Download and process YouTube video if the link is provided
 youtube_video_file_path=""
-# if youtube_link:
-#     youtube_url_pattern = r'^(https?://)?(www\.)?(youtube\.com|youtu\.be)/.+$'
-#     # st.write("Youtube video link: ",youtube_link)
-#     if not re.match(youtube_url_pattern, youtube_link):
-#         st.error(f"Invalid YouTube URL: {youtube_link}")
-#         # raise ValueError("Invalid YouTube URL provided.")
-#     # else:
-#     #     st.write("Link OK")
+if youtube_link:
+    youtube_url_pattern = r'^(https?://)?(www\.)?(youtube\.com|youtu\.be)/.+$'
+    # st.write("Youtube video link: ",youtube_link)
+    if not re.match(youtube_url_pattern, youtube_link):
+        st.error(f"Invalid YouTube URL: {youtube_link}")
+        # raise ValueError("Invalid YouTube URL provided.")
+    # else:
+    #     st.write("Link OK")
 
     
-#     try:
-#         youtube_video_file_path = yt_dlp_download(youtube_link)
-#     except Exception as e:
-#         st.error(f"generate_youtube_transcript_with_groq failed to download YouTube video from URL {youtube_link}: {e}")
-#         st.error(traceback.format_exc())
+    try:
+        youtube_video_file_path = yt_dlp_download(youtube_link)
+    except Exception as e:
+        st.error(f"generate_youtube_transcript_with_groq failed to download YouTube video from URL {youtube_link}: {e}")
+        st.error(traceback.format_exc())
 
 #     # st.video(youtube_video_file_path)
 
@@ -517,21 +517,21 @@ if st.button("Generate Subtitle"):
         st.error("Please upload an audio file.")
 
 if st.button("Generate Youtube Vedio Subtitle"):
-    if youtube_link:
-        youtube_url_pattern = r'^(https?://)?(www\.)?(youtube\.com|youtu\.be)/.+$'
-        # st.write("Youtube video link: ",youtube_link)
-        if not re.match(youtube_url_pattern, youtube_link):
-            st.error(f"Invalid YouTube URL: {youtube_link}")
-            # raise ValueError("Invalid YouTube URL provided.")
-        # else:
-        #     st.write("Link OK")
+    if youtube_video_file_path:
+        # youtube_url_pattern = r'^(https?://)?(www\.)?(youtube\.com|youtu\.be)/.+$'
+        # # st.write("Youtube video link: ",youtube_link)
+        # if not re.match(youtube_url_pattern, youtube_link):
+        #     st.error(f"Invalid YouTube URL: {youtube_link}")
+        #     # raise ValueError("Invalid YouTube URL provided.")
+        # # else:
+        # #     st.write("Link OK")
 
 
-        try:
-            youtube_video_file_path = yt_dlp_download(youtube_link)
-        except Exception as e:
-            st.error(f"generate_youtube_transcript_with_groq failed to download YouTube video from URL {youtube_link}: {e}")
-            st.error(traceback.format_exc())
+        # try:
+        #     youtube_video_file_path = yt_dlp_download(youtube_link)
+        # except Exception as e:
+        #     st.error(f"generate_youtube_transcript_with_groq failed to download YouTube video from URL {youtube_link}: {e}")
+        #     st.error(traceback.format_exc())
 
         # st.video(youtube_video_file_path)
         audio_file = video2mp3(youtube_video_file_path)
