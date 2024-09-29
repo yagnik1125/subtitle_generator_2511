@@ -429,86 +429,75 @@ if st.button("Generate Subtitle"):
         audio = audio.set_channels(1)  # Ensure mono channel
         audio = audio.set_frame_rate(16000)  # Ensure frame rate is 16000 Hz
 
-        # Split the audio into chunks (3 sec per chunk)
-        chunk_duration_ms = 3000  
+        # Split the audio into chunks (30 sec per chunk)
+        chunk_duration_ms = 30000  
         chunks = [audio[i:i + chunk_duration_ms] for i in range(0, len(audio), chunk_duration_ms)]
 
         # Variables to store full transcription and translation
         full_transcription = ""
         full_translation = ""
 
-        # --------------------without chunk starts--------------------------------------------------
-        filename = f"chunk.wav"
-        audio.export(filename, format="wav")
-        with open(filename, "rb") as file:
-            transcription = client.audio.transcriptions.create(
-                file=(filename, file.read()),  # Required audio file
-                model="whisper-large-v3",  # Required model for transcription
-                prompt="transcribe",
-                response_format="verbose_json",  # Optional
-                temperature=0.0  # Optional
-            )
-        # Append the chunk transcription to full transcription
-        transcription_segment=transcription.segments
-        translation_segment=copy.deepcopy(transcription_segment)
-        # translation_segment[0]['text']=translate_text(translation_segment[0]['text'], selected_lang_tar)
+        # # --------------------without chunk starts--------------------------------------------------
+        # filename = f"chunk.wav"
+        # audio.export(filename, format="wav")
+        # with open(filename, "rb") as file:
+        #     transcription = client.audio.transcriptions.create(
+        #         file=(filename, file.read()),  # Required audio file
+        #         model="whisper-large-v3",  # Required model for transcription
+        #         prompt="transcribe",
+        #         response_format="verbose_json",  # Optional
+        #         temperature=0.0  # Optional
+        #     )
+        # # Append the chunk transcription to full transcription
+        # transcription_segment=transcription.segments
+        # translation_segment=copy.deepcopy(transcription_segment)
+        # # translation_segment[0]['text']=translate_text(translation_segment[0]['text'], selected_lang_tar)
         
-        for seg in translation_segment:
-            # st.write(seg['text'])
-            seg['text']=translate_text(seg['text'], selected_lang_tar)
-            # seg['text']=translate_text(seg['text'], 'english')
+        # for seg in translation_segment:
+        #     # st.write(seg['text'])
+        #     seg['text']=translate_text(seg['text'], selected_lang_tar)
+        #     # seg['text']=translate_text(seg['text'], 'english')
 
-        # for i in range(len(transcription_segment)):
-        #     st.write(transcription_segment[i]['text'])
-        #     st.write(translation_segment[i]['text'])
+        # # for i in range(len(transcription_segment)):
+        # #     st.write(transcription_segment[i]['text'])
+        # #     st.write(translation_segment[i]['text'])
 
-        # transcription_text = transcription.text
-        # full_transcription += transcription_text + " "
-        # --------------------without chunk ends--------------------------------------------------
+        # # transcription_text = transcription.text
+        # # full_transcription += transcription_text + " "
+        # # --------------------without chunk ends--------------------------------------------------
 
-        # #----------------------------------chunk wise end----------------------------------------------------------
+        #----------------------------------chunk wise end----------------------------------------------------------
+        full_transcription_segments=[]
+        full_translation_segments=[]
+        # Process each chunk
+        for i, chunk in enumerate(chunks):
+            # Save the chunk to a temporary file
+            chunk_filename = f"chunk_{i}.wav"
+            chunk.export(chunk_filename, format="wav")
 
-        # # Process each chunk
-        # for i, chunk in enumerate(chunks):
-        #     # Save the chunk to a temporary file
-        #     chunk_filename = f"chunk_{i}.wav"
-        #     chunk.export(chunk_filename, format="wav")
+            # Transcribe the chunk using Groq API
+            with open(chunk_filename, "rb") as file:
+                transcription = client.audio.transcriptions.create(
+                    file=(chunk_filename, file.read()),  # Required audio file
+                    model="whisper-large-v3",  # Required model for transcription
+                    prompt="Transcribe",
+                    response_format="verbose_json",  # Optional
+                    temperature=0.0  # Optional
+                )
 
-        #     # Transcribe the chunk using Groq API
-        #     with open(chunk_filename, "rb") as file:
-        #         transcription = client.audio.transcriptions.create(
-        #             file=(chunk_filename, file.read()),  # Required audio file
-        #             model="whisper-large-v3",  # Required model for transcription
-        #             prompt="Transcribe",
-        #             response_format="verbose_json",  # Optional
-        #             temperature=0.0  # Optional
-        #         )
-        #     # Append the chunk transcription to full transcription
-        #     chunk_transcription_text = transcription.text
-        #     full_transcription += chunk_transcription_text + " "
+            transcription_segment=transcription.segments
+            full_transcription_segments.extend(transcription_segment)
+            translation_segment=copy.deepcopy(transcription_segment)
+            for seg in translation_segment:
+                # st.write(seg['text'])
+                seg['text']=translate_text(seg['text'], selected_lang_tar)
+                # seg['text']=translate_text(seg['text'], 'english')
+            full_translation_segments.extend(translation_segment)
 
-        #     # chunk_translation = lt.translate(transcription.text, source=selected_lang_src, target=selected_lang_tar)
-        #     chunk_translation = translate_text(chunk_transcription_text, selected_lang_tar)
-        #     full_translation += chunk_translation + " "
-
-        #     # Show progress on the frontend
-        #     st.write(f"Processed chunk {i+1}/{len(chunks)}")
-        #     st.audio(chunk_filename, format="wav") 
-        #     st.write(f"Chunk Transcription: {chunk_transcription_text}")
-        #     st.write(f"Chunk Translation: {chunk_translation}")
-
-        # #----------------------------------chunk wise end----------------------------------------------------------
-
-        # # Show the final combined transcription and translation
-        # st.write("Final Transcription:")
-        # st.write(full_transcription)
-
-        # st.write(f"Final Translation:")
-        # st.write(full_translation)
-
+        #----------------------------------chunk wise end----------------------------------------------------------
         # --------------------------subtitle start----------------------------------------------
         subtitle_file = "output_subtitle.vtt"
-        write_vtt(translation_segment, subtitle_file)
+        write_vtt(full_translation_segments, subtitle_file)
 
         output_video = "output_video_with_subtitles.mp4"
         add_subtitles_to_video(vedio_file_name, subtitle_file, output_video, get_font_for_language(selected_lang_tar))
