@@ -496,7 +496,7 @@ if st.button("Generate Subtitle"):
                 # seg['text']=translate_text(seg['text'], 'english')
             full_translation_segments.extend(translation_segment)
 
-        st.write(full_translation_segments)
+        # st.write(full_translation_segments)
         #----------------------------------chunk wise end----------------------------------------------------------
         # --------------------------subtitle start----------------------------------------------
         subtitle_file = "output_subtitle.vtt"
@@ -507,7 +507,7 @@ if st.button("Generate Subtitle"):
         # add_subtitles_to_video(vedio_file_name, subtitle_file, output_video, 'Noto Sans Devanagari')
         # add_subtitles_to_video(vedio_file_name, subtitle_file, output_video)
 
-        # st.video(output_video)
+        st.video(output_video)
         # --------------------------subtitle end----------------------------------------------
         # #------------------------------------vedio generator--------------------------------------
 
