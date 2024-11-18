@@ -12,4 +12,3 @@ av
 twilio
 pytube
 yt-dlp
-pyaudio
