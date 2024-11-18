@@ -330,114 +330,107 @@
 
 
 
-import pyaudio
+import sounddevice as sd
+import numpy as np
 import wave
+import io
 import time
 import json
-import copy
-import streamlit as st
+import os
 from groq import Groq
+import streamlit as st
 from pydub import AudioSegment
-import tempfile
 
-# Initialize the Groq client
-client = Groq(api_key="YOUR_API_KEY")
+# Initialize Groq client
+client = Groq(api_key="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")
 
-# Streamlit UI
-st.title("Real-Time Audio to Text & Translation")
-selected_lang_tar = st.selectbox("Select target language for translation", 
-    ['english', 'spanish', 'french', 'german', 'hindi', 'japanese'])  # Add more languages as needed
+# Streamlit app title
+st.title("Live Audio-to-Text Translation")
 
-placeholder = st.empty()
+# Target language selection
+selected_lang_tar = st.selectbox(
+    "Select the target language for translation",
+    [
+        'english', 'spanish', 'french', 'german', 'hindi', 'chinese (simplified)',
+        'japanese', 'korean', 'arabic', 'russian', 'portuguese', 'bengali', 'urdu', 'tamil', 'telugu'
+    ],
+)
 
-# Audio recording configuration
-CHUNK = 1024
-FORMAT = pyaudio.paInt16
-CHANNELS = 1
-RATE = 16000
-RECORD_SECONDS = 5  # Process every 5 seconds
+# Audio recording parameters
+sample_rate = 16000  # Required for Groq Whisper model
+channels = 1  # Mono audio
+chunk_duration = 5  # Process audio in 5-second chunks
 
-def record_audio_to_file(filename, duration=5):
-    """Record audio for a given duration and save to a file."""
-    p = pyaudio.PyAudio()
-    stream = p.open(format=FORMAT, channels=CHANNELS,
-                    rate=RATE, input=True,
-                    frames_per_buffer=CHUNK)
+# Function to record audio
+def record_audio_chunk(duration):
+    st.write("Recording...")
+    audio_data = sd.rec(int(duration * sample_rate), samplerate=sample_rate, channels=channels, dtype='int16')
+    sd.wait()
+    st.write("Processing...")
+    return audio_data
 
-    frames = []
-    for _ in range(0, int(RATE / CHUNK * duration)):
-        data = stream.read(CHUNK)
-        frames.append(data)
+# Function to save audio as WAV
+def save_audio_to_wav(audio_data, filename):
+    with wave.open(filename, 'wb') as wf:
+        wf.setnchannels(channels)
+        wf.setsampwidth(2)  # 2 bytes per sample
+        wf.setframerate(sample_rate)
+        wf.writeframes(audio_data.tobytes())
 
-    stream.stop_stream()
-    stream.close()
-    p.terminate()
-
-    # Save the audio to a file
-    wf = wave.open(filename, 'wb')
-    wf.setnchannels(CHANNELS)
-    wf.setsampwidth(p.get_sample_size(FORMAT))
-    wf.setframerate(RATE)
-    wf.writeframes(b''.join(frames))
-    wf.close()
-
+# Function to translate text
 def translate_text(text, target_language):
-    """Translate text using Groq."""
     try:
-        response = client.chat.completions.create(
+        chat_completion = client.chat.completions.create(
             messages=[
                 {
                     "role": "system",
-                    "content": f"Translate this text to '{target_language}': {text}",
+                    "content": f"Translate this text to '{target_language}'. Text: {text}. ONLY RETURN TRANSLATED TEXT.",
                 }
             ],
             model="llama-3.1-70b-versatile",
         )
-        return response.choices[0].message.content.strip()
+        return chat_completion.choices[0].message.content.strip()
     except Exception as e:
-        st.error(f"Translation error: {str(e)}")
-        return text
+        return f"Translation error: {str(e)}"
 
-def process_audio_chunk(filename):
-    """Process an audio file chunk for transcription and translation."""
-    try:
-        with open(filename, "rb") as file:
-            transcription = client.audio.transcriptions.create(
-                file=(filename, file.read()),
-                model="whisper-large-v3",
-                response_format="verbose_json",
-            )
-        # Extract and translate text from the transcription
-        transcription_segment = transcription.segments
-        translated_segments = copy.deepcopy(transcription_segment)
-        for seg in translated_segments:
-            seg['text'] = translate_text(seg['text'], selected_lang_tar)
-        return translated_segments
-    except Exception as e:
-        st.error(f"Audio processing error: {str(e)}")
-        return []
-
-def live_audio_to_text_simulation():
-    """Simulate live audio to text processing."""
-    st.write("Click 'Start' to begin live processing.")
-    start_button = st.button("Start")
+# Function to display live subtitles
+def display_live_subtitles(audio_path):
+    with open(audio_path, "rb") as file:
+        transcription = client.audio.transcriptions.create(
+            file=("audio.wav", file.read()),
+            model="whisper-large-v3",
+            response_format="verbose_json",
+            temperature=0.0
+        )
     
-    if start_button:
-        st.write("Recording... Speak into your microphone.")
-        for i in range(20):  # Simulate for 20 iterations (100 seconds total)
-            temp_audio_file = f"chunk_{i}.wav"
-            record_audio_to_file(temp_audio_file, RECORD_SECONDS)
+    # Extract segments and translate each
+    translated_segments = []
+    for segment in transcription.segments:
+        translated_text = translate_text(segment['text'], selected_lang_tar)
+        translated_segments.append({"start": segment['start'], "end": segment['end'], "text": translated_text})
+    
+    # Display subtitles live
+    placeholder = st.empty()
+    for segment in translated_segments:
+        placeholder.markdown(
+            f"<h3 style='text-align: center; color: green;'>{segment['text']}</h3>",
+            unsafe_allow_html=True,
+        )
+        time.sleep(segment["end"] - segment["start"])  # Wait for the duration of the segment
+    placeholder.empty()
 
-            segments = process_audio_chunk(temp_audio_file)
-            if segments:
-                placeholder.empty()
-                placeholder.markdown(
-                    f"<h5 style='text-align: center; color: green;'>{segments[0]['text']}</h5>",
-                    unsafe_allow_html=True,
-                )
-            else:
-                st.warning("No transcription available for this chunk.")
+# Main app functionality
+if st.button("Start Live Translation"):
+    audio_chunks = []
+    audio_path = "live_audio.wav"
+    
+    for i in range(3):  # Record and process 3 chunks for demo
+        audio_data = record_audio_chunk(chunk_duration)
+        audio_chunks.append(audio_data)
+        
+        # Save each chunk to WAV and process it
+        save_audio_to_wav(audio_data, audio_path)
+        display_live_subtitles(audio_path)
+    
+    st.success("Live translation completed!")
 
-            time.sleep(0.5)  # Short delay before recording the next chunk
-
-live_audio_to_text_simulation()
