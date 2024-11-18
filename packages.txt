@@ -24,3 +24,4 @@ fonts-thai-tlwg
 libsm6
 libxext6
 libxrender1
+sounddevice
