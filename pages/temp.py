@@ -330,13 +330,13 @@
 
 
 
-import pyaudio 
-import wave
 import io
+import wave
 import time
 import json
 from groq import Groq
 import streamlit as st
+from streamlit_webrtc import webrtc_streamer, AudioProcessorBase, WebRtcMode, ClientSettings
 
 # Initialize Groq client
 client = Groq(api_key="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")
@@ -354,10 +354,6 @@ selected_lang_tar = st.selectbox(
 )
 
 # Audio recording parameters
-chunk = 1024  # Buffer size
-sample_format = pyaudio.paInt16  # 16-bit audio format
-channels = 1  # Mono audio
-rate = 16000  # 16 kHz sample rate
 chunk_duration = 5  # Duration of each recording chunk in seconds
 
 # Function to translate text
@@ -376,66 +372,59 @@ def translate_text(text, target_language):
     except Exception as e:
         return f"Translation error: {str(e)}"
 
-# Function to process and display live subtitles
-def process_audio_translation(audio_data):
-    audio_stream = io.BytesIO(audio_data)
-    with wave.open(audio_stream, 'rb') as wf:
-        transcription = client.audio.transcriptions.create(
-            file=("chunk.wav", audio_stream.getvalue()),
-            model="whisper-large-v3",
-            response_format="verbose_json",
-            temperature=0.0
-        )
+# Audio Processor for streamlit-webrtc
+class AudioProcessor(AudioProcessorBase):
+    def __init__(self):
+        self.frames = []
     
-    translated_segments = []
-    for segment in transcription.segments:
-        translated_text = translate_text(segment['text'], selected_lang_tar)
-        translated_segments.append({"start": segment['start'], "end": segment['end'], "text": translated_text})
-    
-    # Display translated subtitles live
-    placeholder = st.empty()
-    for segment in translated_segments:
-        placeholder.markdown(
-            f"<h3 style='text-align: center; color: green;'>{segment['text']}</h3>",
-            unsafe_allow_html=True,
-        )
-        time.sleep(segment["end"] - segment["start"])
-    placeholder.empty()
-
-# Function to record audio using PyAudio
-def record_audio_stream(duration):
-    audio_interface = pyaudio.PyAudio()
-    stream = audio_interface.open(format=sample_format, channels=channels, rate=rate, input=True, frames_per_buffer=chunk)
-    
-    frames = []
-    st.write("Recording...")
-    for _ in range(0, int(rate / chunk * duration)):
-        data = stream.read(chunk)
-        frames.append(data)
-    
-    st.write("Recording complete.")
-    stream.stop_stream()
-    stream.close()
-    audio_interface.terminate()
-    
-    return b''.join(frames)
-
-# Main app functionality
-if st.button("Start Live Translation"):
-    audio_path = "chunk.wav"
-    
-    for i in range(3):  # Record and process 3 chunks for demo
-        audio_data = record_audio_stream(chunk_duration)
+    def recv(self, frame):
+        # Capture audio chunks
+        self.frames.append(frame)
         
-        # Save chunk to WAV file
-        with wave.open(audio_path, 'wb') as wf:
-            wf.setnchannels(channels)
-            wf.setsampwidth(pyaudio.PyAudio().get_sample_size(sample_format))
-            wf.setframerate(rate)
-            wf.writeframes(audio_data)
+        # Process every `chunk_duration` seconds
+        if len(self.frames) >= chunk_duration * 30:  # Roughly 30 frames per second
+            audio_data = b''.join(self.frames)
+            self.frames = []
+            self.process_audio_translation(audio_data)
         
-        # Process and translate audio
-        process_audio_translation(audio_data)
-    
-    st.success("Live translation completed!")
+        return frame
 
+    def process_audio_translation(self, audio_data):
+        audio_stream = io.BytesIO(audio_data)
+        with wave.open(audio_stream, 'rb') as wf:
+            transcription = client.audio.transcriptions.create(
+                file=("chunk.wav", audio_stream.getvalue()),
+                model="whisper-large-v3",
+                response_format="verbose_json",
+                temperature=0.0
+            )
+        
+        translated_segments = []
+        for segment in transcription.segments:
+            translated_text = translate_text(segment['text'], selected_lang_tar)
+            translated_segments.append({"start": segment['start'], "end": segment['end'], "text": translated_text})
+        
+        # Display translated subtitles live
+        placeholder = st.empty()
+        for segment in translated_segments:
+            placeholder.markdown(
+                f"<h3 style='text-align: center; color: green;'>{segment['text']}</h3>",
+                unsafe_allow_html=True,
+            )
+            time.sleep(segment["end"] - segment["start"])
+        placeholder.empty()
+
+# Streamlit WebRTC settings
+client_settings = ClientSettings(
+    audio=True, video=False
+)
+
+# Start the WebRTC stream
+webrtc_streamer(
+    key="audio-transcription",
+    mode=WebRtcMode.SENDRECV,
+    audio_processor_factory=AudioProcessor,
+    client_settings=client_settings
+)
+
+st.success("Live translation completed!")
