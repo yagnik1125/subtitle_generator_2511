@@ -326,19 +326,19 @@ def get_font_for_language(language):
     return font_mapping.get(language.lower(), 'Roboto')  # Default to Roboto if no specific font is found
 
 
-vedio_file_name=""
-uploaded_vedio_file = st.file_uploader("Upload a video file", type=["mp4", "mov", "avi", "mkv"])
-if uploaded_vedio_file is not None:
+video_file_name=""
+uploaded_video_file = st.file_uploader("Upload a video file", type=["mp4", "mov", "avi", "mkv"])
+if uploaded_video_file is not None:
     tfile = tempfile.NamedTemporaryFile(delete=False)
-    tfile.write(uploaded_vedio_file.read())
+    tfile.write(uploaded_video_file.read())
     video_capture = cv2.VideoCapture(tfile.name)
-    vedio_file_name = tfile.name
-    st.write(f"Vedio File saved at: {vedio_file_name}")
+    video_file_name = tfile.name
+    st.write(f"Video File saved at: {video_file_name}")
     # st.text("Video Loaded Successfully!")
     total_frames = int(video_capture.get(cv2.CAP_PROP_FRAME_COUNT))
     frame_rate = int(video_capture.get(cv2.CAP_PROP_FPS))
     duration = total_frames / frame_rate
-    # st.video(uploaded_vedio_file)
+    # st.video(uploaded_video_file)
     video_capture.release()
     # os.remove(tfile.name)
 
@@ -419,9 +419,9 @@ selected_lang_tar = st.selectbox("Select the Target language for Subtitle", ['af
 
 # Button to trigger translation
 if st.button("Generate Subtitle"):
-    if uploaded_vedio_file is not None:
-        # st.write("Vedio transcription starts...")
-        audio_file = video2mp3(vedio_file_name)
+    if uploaded_video_file is not None:
+        # st.write("Video transcription starts...")
+        audio_file = video2mp3(video_file_name)
         audio_buffer = get_audio_buffer(audio_file)
         # st.audio(audio_buffer)
         # Load the audio using pydub
@@ -503,23 +503,33 @@ if st.button("Generate Subtitle"):
         write_vtt(full_translation_segments, subtitle_file)
 
         output_video = "output_video_with_subtitles.mp4"
-        add_subtitles_to_video(vedio_file_name, subtitle_file, output_video, get_font_for_language(selected_lang_tar))
-        # add_subtitles_to_video(vedio_file_name, subtitle_file, output_video, 'Noto Sans Devanagari')
-        # add_subtitles_to_video(vedio_file_name, subtitle_file, output_video)
+        add_subtitles_to_video(video_file_name, subtitle_file, output_video, get_font_for_language(selected_lang_tar))
+        # add_subtitles_to_video(video_file_name, subtitle_file, output_video, 'Noto Sans Devanagari')
+        # add_subtitles_to_video(video_file_name, subtitle_file, output_video)
+
+        with open(output_video, "rb") as f:
+            video_data = f.read()
 
         st.video(output_video)
+        
+        # st.download_button(
+        #     label="Download Video",
+        #     data=video_data,
+        #     file_name="downloaded_video.mp4",  # Name of the file when downloaded
+        #     mime="video/mp4"  # MIME type for mp4 files
+        # )
         # --------------------------subtitle end----------------------------------------------
-        # #------------------------------------vedio generator--------------------------------------
+        # #------------------------------------video generator--------------------------------------
 
-        # write_vtt(transcription_segment, os.path.join("/", vedio_file_name + ".vtt"))
-        # os.system(f'ffmpeg -i "{vedio_file_name}" -vf subtitles="{vedio_file_name}.vtt" "{vedio_file_name}_subtitled.mp4" ')
+        # write_vtt(transcription_segment, os.path.join("/", video_file_name + ".vtt"))
+        # os.system(f'ffmpeg -i "{video_file_name}" -vf subtitles="{video_file_name}.vtt" "{video_file_name}_subtitled.mp4" ')
 
-        # st.video(f"{vedio_file_name}_subtitled.mp4")
+        # st.video(f"{video_file_name}_subtitled.mp4")
 
     else:
         st.error("Please upload an audio file.")
 
-if st.button("Generate Youtube Vedio Subtitle"):
+if st.button("Generate Youtube Video Subtitle"):
     if youtube_video_file_path:
         # youtube_url_pattern = r'^(https?://)?(www\.)?(youtube\.com|youtu\.be)/.+$'
         # # st.write("Youtube video link: ",youtube_link)
@@ -606,7 +616,17 @@ if st.button("Generate Youtube Vedio Subtitle"):
         output_youtube_video = "output_video_with_subtitles.mp4"
         add_subtitles_to_video(youtube_video_file_path, subtitle_youtube_file, output_youtube_video, get_font_for_language(selected_lang_tar))
 
+        with open(output_youtube_video, "rb") as f:
+            video_data = f.read()
+
         st.video(output_youtube_video)
+
+        # st.download_button(
+        #     label="Download Video",
+        #     data=video_data,
+        #     file_name="downloaded_video.mp4",  # Name of the file when downloaded
+        #     mime="video/mp4"  # MIME type for mp4 files
+        # )
 
     else:
         st.error("Please upload a video file or provide a YouTube link.")
