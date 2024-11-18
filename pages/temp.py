@@ -347,6 +347,10 @@ client = Groq(api_key="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"
 # Streamlit app title
 st.title("Live Audio-to-Text Translation")
 
+# Query devices and list them
+devices = sd.query_devices()
+print("Available devices:", devices)
+
 # Target language selection
 selected_lang_tar = st.selectbox(
     "Select the target language for translation",
