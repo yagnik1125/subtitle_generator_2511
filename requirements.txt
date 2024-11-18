@@ -14,4 +14,3 @@ twilio
 pytube
 yt-dlp
 sounddevice
-puaudio
