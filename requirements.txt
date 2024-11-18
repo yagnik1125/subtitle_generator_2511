@@ -12,3 +12,4 @@ av
 twilio
 pytube
 yt-dlp
+sounddevice
