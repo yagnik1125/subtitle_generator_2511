@@ -8,6 +8,7 @@ opencv-python
 numpy
 ffmpeg-python
 streamlit-webrtc
+wave
 av
 twilio
 pytube
