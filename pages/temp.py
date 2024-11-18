@@ -330,26 +330,19 @@
 
 
 
-import sounddevice as sd
-import numpy as np
+import pyaudio
 import wave
 import io
 import time
 import json
-import os
 from groq import Groq
 import streamlit as st
-from pydub import AudioSegment
 
 # Initialize Groq client
 client = Groq(api_key="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")
 
 # Streamlit app title
 st.title("Live Audio-to-Text Translation")
-
-# Query devices and list them
-devices = sd.query_devices()
-print("Available devices:", devices)
 
 # Target language selection
 selected_lang_tar = st.selectbox(
@@ -361,25 +354,11 @@ selected_lang_tar = st.selectbox(
 )
 
 # Audio recording parameters
-sample_rate = 16000  # Required for Groq Whisper model
+chunk = 1024  # Buffer size
+sample_format = pyaudio.paInt16  # 16-bit audio format
 channels = 1  # Mono audio
-chunk_duration = 5  # Process audio in 5-second chunks
-
-# Function to record audio
-def record_audio_chunk(duration):
-    st.write("Recording...")
-    audio_data = sd.rec(int(duration * sample_rate), samplerate=sample_rate, channels=channels, dtype='int16')
-    sd.wait()
-    st.write("Processing...")
-    return audio_data
-
-# Function to save audio as WAV
-def save_audio_to_wav(audio_data, filename):
-    with wave.open(filename, 'wb') as wf:
-        wf.setnchannels(channels)
-        wf.setsampwidth(2)  # 2 bytes per sample
-        wf.setframerate(sample_rate)
-        wf.writeframes(audio_data.tobytes())
+rate = 16000  # 16 kHz sample rate
+chunk_duration = 5  # Duration of each recording chunk in seconds
 
 # Function to translate text
 def translate_text(text, target_language):
@@ -397,44 +376,66 @@ def translate_text(text, target_language):
     except Exception as e:
         return f"Translation error: {str(e)}"
 
-# Function to display live subtitles
-def display_live_subtitles(audio_path):
-    with open(audio_path, "rb") as file:
+# Function to process and display live subtitles
+def process_audio_translation(audio_data):
+    audio_stream = io.BytesIO(audio_data)
+    with wave.open(audio_stream, 'rb') as wf:
         transcription = client.audio.transcriptions.create(
-            file=("audio.wav", file.read()),
+            file=("chunk.wav", audio_stream.getvalue()),
             model="whisper-large-v3",
             response_format="verbose_json",
             temperature=0.0
         )
     
-    # Extract segments and translate each
     translated_segments = []
     for segment in transcription.segments:
         translated_text = translate_text(segment['text'], selected_lang_tar)
         translated_segments.append({"start": segment['start'], "end": segment['end'], "text": translated_text})
     
-    # Display subtitles live
+    # Display translated subtitles live
     placeholder = st.empty()
     for segment in translated_segments:
         placeholder.markdown(
             f"<h3 style='text-align: center; color: green;'>{segment['text']}</h3>",
             unsafe_allow_html=True,
         )
-        time.sleep(segment["end"] - segment["start"])  # Wait for the duration of the segment
+        time.sleep(segment["end"] - segment["start"])
     placeholder.empty()
+
+# Function to record audio using PyAudio
+def record_audio_stream(duration):
+    audio_interface = pyaudio.PyAudio()
+    stream = audio_interface.open(format=sample_format, channels=channels, rate=rate, input=True, frames_per_buffer=chunk)
+    
+    frames = []
+    st.write("Recording...")
+    for _ in range(0, int(rate / chunk * duration)):
+        data = stream.read(chunk)
+        frames.append(data)
+    
+    st.write("Recording complete.")
+    stream.stop_stream()
+    stream.close()
+    audio_interface.terminate()
+    
+    return b''.join(frames)
 
 # Main app functionality
 if st.button("Start Live Translation"):
-    audio_chunks = []
-    audio_path = "live_audio.wav"
+    audio_path = "chunk.wav"
     
     for i in range(3):  # Record and process 3 chunks for demo
-        audio_data = record_audio_chunk(chunk_duration)
-        audio_chunks.append(audio_data)
+        audio_data = record_audio_stream(chunk_duration)
         
-        # Save each chunk to WAV and process it
-        save_audio_to_wav(audio_data, audio_path)
-        display_live_subtitles(audio_path)
+        # Save chunk to WAV file
+        with wave.open(audio_path, 'wb') as wf:
+            wf.setnchannels(channels)
+            wf.setsampwidth(pyaudio.PyAudio().get_sample_size(sample_format))
+            wf.setframerate(rate)
+            wf.writeframes(audio_data)
+        
+        # Process and translate audio
+        process_audio_translation(audio_data)
     
     st.success("Live translation completed!")
 
