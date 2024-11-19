@@ -277,6 +277,7 @@ with col1:
                 for seg in transcription_segment:
                     if seg['text']:
                         full_transcription_file.write(seg['text'] + "\n")
+            transcription_segment=adjust_segments(transcription_segment)
             # Save segments to file
             with open(transcription_segment_file, "w") as f:
                 json.dump(transcription_segment, f)
@@ -295,7 +296,7 @@ with col1:
                     if seg['text']:
                         full_translation_file.write(seg['text'] + "\n")
                 
-
+            translation_segment=adjust_segments(translation_segment)
             # segments=adjust_segments(translation_segment)
             # Save segments to file
             with open(translation_segment_file, "w") as f:
@@ -343,6 +344,7 @@ with col2:
                 for seg in transcription_segment:
                     if seg['text']:
                         full_transcription_file.write(seg['text'] + "\n")
+            transcription_segment=adjust_segments(transcription_segment)
             # Save segments to file
             with open(transcription_segment_file, "w") as f:
                 json.dump(transcription_segment, f)
@@ -361,7 +363,7 @@ with col2:
                     if seg['text']:
                         full_translation_file.write(seg['text'] + "\n")
                 
-
+            translation_segment=adjust_segments(translation_segment)
             # segments=adjust_segments(translation_segment)
             # Save segments to file
             with open(translation_segment_file, "w") as f:
