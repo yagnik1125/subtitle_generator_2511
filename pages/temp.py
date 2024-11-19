@@ -184,7 +184,7 @@ def audio_to_base64(audio_path):
     except Exception as e:
         raise Exception(f"Error encoding audio to Base64: {e}")
     
-def display_subtitles(audio_path, segments, auto_play=True):
+def display_subtitles(audio_path, transcription_segment,translation_segment, auto_play=True):
     if auto_play:
         # Embed the audio player with autoplay enabled
         st.markdown(
@@ -201,14 +201,24 @@ def display_subtitles(audio_path, segments, auto_play=True):
 
     placeholder = st.empty()
 
+    # time.sleep(2)
+    # # Simulate subtitle display
+    # for segment in segments:
+    #     placeholder.markdown(
+    #         f"<h5 style='text-align: center; color: green;'>{segment['text']}</h5>",
+    #         unsafe_allow_html=True,
+    #     )
+    #     time.sleep(segment["end"] - segment["start"])  # Wait for the duration of the segment
+    # placeholder.empty()  # Clear the subtitle at the end
+
     time.sleep(2)
     # Simulate subtitle display
-    for segment in segments:
+    for i in range(len(translation_segment)):
         placeholder.markdown(
-            f"<h5 style='text-align: center; color: green;'>{segment['text']}</h5>",
+            f"<h5 style='text-align: center; color: green;'>{transcription_segment['text']}</h5><br><h5 style='text-align: center; color: green;'>{translation_segment['text']}</h5>",
             unsafe_allow_html=True,
         )
-        time.sleep(segment["end"] - segment["start"])  # Wait for the duration of the segment
+        time.sleep(transcription_segment["end"] - transcription_segment["start"])  # Wait for the duration of the segment
     placeholder.empty()  # Clear the subtitle at the end
 
 def adjust_segments(segments):
@@ -223,9 +233,12 @@ selected_lang_tar = st.selectbox("Select the target language for translation", [
 
 col1, col2 = st.columns(2)
 segments = []
-segment_file="segments.json"
+transcription_segment_file="transcription_segments.json"
+translation_segment_file="translation_segments.json"
+
 # Variables to store full transcription and translation
 full_transcription = ""
+full_transcription_file = "full_transcription.txt"
 full_translation = ""
 full_translation_file="full_translation.txt"
 
@@ -260,6 +273,14 @@ with col1:
                     temperature=0.0  # Optional
                 )
             transcription_segment=transcription.segments
+            with open('full_transcription.txt', 'w') as full_transcription_file:
+                for seg in transcription_segment:
+                    if seg['text']:
+                        full_transcription_file.write(seg['text'] + "\n")
+            # Save segments to file
+            with open(transcription_segment_file, "w") as f:
+                json.dump(transcription_segment, f)
+            
             translation_segment=copy.deepcopy(transcription_segment)
 
             # for seg in translation_segment:
@@ -275,11 +296,10 @@ with col1:
                         full_translation_file.write(seg['text'] + "\n")
                 
 
-            segments=adjust_segments(translation_segment)
-            
+            # segments=adjust_segments(translation_segment)
             # Save segments to file
-            with open(segment_file, "w") as f:
-                json.dump(segments, f)
+            with open(translation_segment_file, "w") as f:
+                json.dump(translation_segment, f)
 
         else:
             st.error("Please upload an audio file.")
@@ -319,27 +339,46 @@ with col2:
                     temperature=0.0  # Optional
                 )
             transcription_segment=transcription.segments
+            with open('full_transcription.txt', 'w') as full_transcription_file:
+                for seg in transcription_segment:
+                    if seg['text']:
+                        full_transcription_file.write(seg['text'] + "\n")
+            # Save segments to file
+            with open(transcription_segment_file, "w") as f:
+                json.dump(transcription_segment, f)
+            
             translation_segment=copy.deepcopy(transcription_segment)
-            for seg in translation_segment:
-                # st.write(seg['text'])
-                seg['text']=translate_text(seg['text'], selected_lang_tar)
+
+            # for seg in translation_segment:
+            #     # st.write(seg['text'])
+            #     seg['text']=translate_text(seg['text'], selected_lang_tar)
+            #     full_translation += seg['text'] + "\n"
+            # Open 'full_translation.txt' for writing/creating the file
+            with open('full_translation.txt', 'w') as full_translation_file:
+                for seg in translation_segment:
+                    # Translate the text and write to the file
+                    seg['text'] = translate_text(seg['text'], selected_lang_tar)
+                    if seg['text']:
+                        full_translation_file.write(seg['text'] + "\n")
                 
 
-            segments=adjust_segments(translation_segment)
-            
+            # segments=adjust_segments(translation_segment)
             # Save segments to file
-            with open(segment_file, "w") as f:
-                json.dump(segments, f)
-            
+            with open(translation_segment_file, "w") as f:
+                json.dump(translation_segment, f)
+
         else:
             st.error("Please upload an audio file.")
 
 if st.button("Play Audio with Subtitles"):
-    if os.path.exists(segment_file):
-        with open(segment_file, "r") as f:
-            segments = json.load(f)
+    if os.path.exists(transcription_segment_file) and os.path.exists(translation_segment_file):
+        transcription_segment,translation_segment
+        with open(transcription_segment_file, "r") as f:
+            transcription_segment = json.load(f)
+        with open(translation_segment_file, "r") as f:
+            translation_segment = json.load(f)
         
-        display_subtitles("temp_audio_file", segments)
+        display_subtitles("temp_audio_file", transcription_segment,translation_segment)
     else:
         st.error("No segments file found. Please process an audio file first.")
 
