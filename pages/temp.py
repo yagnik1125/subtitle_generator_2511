@@ -224,6 +224,9 @@ selected_lang_tar = st.selectbox("Select the target language for translation", [
 col1, col2 = st.columns(2)
 segments = []
 segment_file="segments.json"
+# Variables to store full transcription and translation
+full_transcription = ""
+full_translation = ""
 with col1:
     if st.button("Audio 2 Text for Uploaded Audio"):
         # st.write("Processing uploaded file...")
@@ -242,10 +245,6 @@ with col1:
             chunk_duration_ms = 30000  
             chunks = [audio[i:i + chunk_duration_ms] for i in range(0, len(audio), chunk_duration_ms)]
 
-            # Variables to store full transcription and translation
-            full_transcription = ""
-            full_translation = ""
-
             segments.clear()
 
             filename = f"chunk.wav"
@@ -263,6 +262,7 @@ with col1:
             for seg in translation_segment:
                 # st.write(seg['text'])
                 seg['text']=translate_text(seg['text'], selected_lang_tar)
+                full_translation += seg['text'] + "\n"
                 
 
             segments=adjust_segments(translation_segment)
@@ -294,9 +294,7 @@ with col2:
             chunk_duration_ms = 30000  
             chunks = [audio[i:i + chunk_duration_ms] for i in range(0, len(audio), chunk_duration_ms)]
 
-            # Variables to store full transcription and translation
-            full_transcription = ""
-            full_translation = ""
+            
 
             segments.clear()
 
@@ -335,17 +333,42 @@ if st.button("Play Audio with Subtitles"):
     else:
         st.error("No segments file found. Please process an audio file first.")
 
-# Inside your Streamlit layout
+# # Inside your Streamlit layout
+# if os.path.exists(segment_file):
+#     # Provide the download button if the segments file exists
+#     with open(segment_file, "r") as f:
+#         segments = json.load(f)
+    
+#     st.download_button(
+#         label="Download Segments JSON",
+#         data=json.dumps(segments),  # Convert the segments dictionary to JSON
+#         file_name="segments.json",  # The name of the file the user will download
+#         mime="application/json"  # MIME type for JSON
+#     )
+# else:
+#     st.error("No segments file found. Please process an audio file first.")
+
+
+# Add a button to download the full translation as a text file
 if os.path.exists(segment_file):
     # Provide the download button if the segments file exists
     with open(segment_file, "r") as f:
         segments = json.load(f)
     
+    # Button to download segments.json
     st.download_button(
         label="Download Segments JSON",
         data=json.dumps(segments),  # Convert the segments dictionary to JSON
         file_name="segments.json",  # The name of the file the user will download
         mime="application/json"  # MIME type for JSON
+    )
+
+    # Button to download the full translation as a text file
+    st.download_button(
+        label="Download Full Translation (TXT)",
+        data=full_translation,  # Use the full_translation string as the file content
+        file_name="full_translation.txt",  # The name of the text file
+        mime="text/plain"  # MIME type for plain text files
     )
 else:
     st.error("No segments file found. Please process an audio file first.")
