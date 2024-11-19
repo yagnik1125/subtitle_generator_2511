@@ -399,6 +399,17 @@ if st.button("Play Audio with Subtitles"):
 # else:
 #     st.error("No segments file found. Please process an audio file first.")
 
+# Add a button to download the full translation as a text file
+if os.path.exists('full_transcription.txt'):
+    with open('full_transcription.txt', 'r') as file:
+        full_transcription_content = file.read()
+
+    st.download_button(
+        label="Download Full Transcription (TXT)",
+        data=full_transcription_content,  # Use the file content as the download data
+        file_name="full_transcription.txt",  # The name of the file the user will download
+        mime="text/plain"  # MIME type for plain text files
+    )
 
 # Add a button to download the full translation as a text file
 if os.path.exists('full_translation.txt'):
