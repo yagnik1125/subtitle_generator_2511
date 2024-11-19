@@ -411,14 +411,20 @@ if os.path.exists('full_translation.txt'):
     )
 
 # Add a button to download the segments as JSON
-if os.path.exists(segment_file):
-    with open(segment_file, "r") as f:
+if os.path.exists(transcription_segment_file):
+    with open(transcription_segment_file, "r") as f:
         segments = json.load(f)
     
     st.download_button(
-        label="Download Segments JSON",
+        label="Download transcription Segments JSON",
         data=json.dumps(segments),  # Convert the segments dictionary to JSON
-        file_name="segments.json",  # The name of the file the user will download
+        file_name="transcription_segments.json",  # The name of the file the user will download
+        mime="application/json"  # MIME type for JSON
+    )
+    st.download_button(
+        label="Download translation Segments JSON",
+        data=json.dumps(segments),  # Convert the segments dictionary to JSON
+        file_name="translation_segments.json",  # The name of the file the user will download
         mime="application/json"  # MIME type for JSON
     )
 else:
