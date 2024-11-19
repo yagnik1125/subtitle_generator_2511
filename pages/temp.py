@@ -46,66 +46,7 @@ if mic_audio:
         wav_file.setsampwidth(sample_width)
         wav_file.setframerate(framerate)
         wav_file.writeframes(audio_bytes)
-    # st.write("mic audio through wav")
-    # st.audio(audio_file_like, format='wav')
-
-# def get_audio_buffer(audio_file):
-#     with open(audio_file, "rb") as f:
-#         audio_buffer = io.BytesIO(f.read())  # Read the file and store it in BytesIO buffer
-#     return audio_buffer
-
-# def video2mp3(video_file, output_ext="mp3"):
-#     filename, ext = os.path.splitext(video_file)
-#     subprocess.call(["ffmpeg", "-y", "-i", video_file, f"{filename}.{output_ext}"], 
-#                     stdout=subprocess.DEVNULL,
-#                     stderr=subprocess.STDOUT)
-#     return f"{filename}.{output_ext}"
-
-
-# def write_vtt(segments, file_path):
-#     with open(file_path, 'w', encoding="utf-8") as vtt_file:
-#         vtt_file.write("WEBVTT\n\n")
-#         for i, segment in enumerate(segments):
-#             start = segment['start']
-#             end = segment['end']
-#             text = segment['text']
-#             # Convert start and end times to VTT format (HH:MM:SS.mmm)
-#             start_time = "{:02}:{:02}:{:06.3f}".format(int(start // 3600), int((start % 3600) // 60), start % 60)
-#             end_time = "{:02}:{:02}:{:06.3f}".format(int(end // 3600), int((end % 3600) // 60), end % 60)
-#             vtt_file.write(f"{i}\n")
-#             vtt_file.write(f"{start_time} --> {end_time}\n")
-#             vtt_file.write(f"{text}\n\n")
-
-
-
-# def add_subtitles_to_video(input_video, subtitle_file, output_video):
-#     # Use FFmpeg to add the subtitle to the video
-#     command = [
-#         'ffmpeg', '-y', '-i', input_video, '-vf', f"subtitles={subtitle_file}", output_video
-#     ]
-#     subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-
-# def add_subtitles_to_video(input_video, input_subtitle, output_video, font="Noto Sans Devanagari"):
-#     try:
-#         # Add subtitles filter with force_style option to specify font
-#         ffmpeg_output = (
-#             ffmpeg
-#             .input(input_video)
-#             .output(
-#                 output_video,
-#                 vf=f"subtitles={input_subtitle}:force_style='FontName={font}'",  # Applying subtitles with font style
-#                 vcodec="libx264",  # Re-encode video to ensure filtering works
-#                 acodec="aac",  # Re-encode audio
-#                 strict="experimental"  # Required for AAC audio
-#             )
-#         )
-
-#         # Run the ffmpeg process
-#         ffmpeg_output.run(overwrite_output=True)
-#         print(f"Subtitles added successfully to {output_video} using font {font}")
-
-#     except ffmpeg.Error as e:
-#         print(f"An error occurred: {e.stderr.decode()}")
+    
 
 def translate_text(text, targ_lang):
     try:
@@ -278,20 +219,6 @@ def adjust_segments(segments):
     
     return adjusted_segments
 
-# # Function to synchronize subtitles with audio
-# def display_subtitles(audio_path, segments):
-#     st.audio(audio_path, format="audio/wav", start_time=0)
-#     placeholder = st.empty()
-
-#     # Simulate subtitle display
-#     for segment in segments:
-#         placeholder.markdown(
-#             f"<h5 style='text-align: center; color: green;'>{segment['translated_text']}</h5>",
-#             unsafe_allow_html=True,
-#         )
-#         time.sleep(segment["end"]-segment["start"])  # Wait for the duration of the segment
-#     placeholder.empty()  # Clear the subtitle at the end
-
 selected_lang_tar = st.selectbox("Select the target language for translation", ['afrikaans', 'albanian', 'amharic', 'arabic', 'armenian', 'azerbaijani', 'basque', 'belarusian', 'bengali', 'bosnian', 'bulgarian', 'catalan', 'cebuano', 'chichewa', 'chinese (simplified)', 'chinese (traditional)', 'corsican', 'croatian', 'czech', 'danish', 'dutch', 'english', 'esperanto', 'estonian', 'filipino', 'finnish', 'french', 'frisian', 'galician', 'georgian', 'german', 'greek', 'gujarati', 'haitian creole', 'hausa', 'hawaiian', 'hebrew', 'hebrew', 'hindi', 'hmong', 'hungarian', 'icelandic', 'igbo', 'indonesian', 'irish', 'italian', 'japanese', 'javanese', 'kannada', 'kazakh', 'khmer', 'korean', 'kurdish (kurmanji)', 'kyrgyz', 'lao', 'latin', 'latvian', 'lithuanian', 'luxembourgish', 'macedonian', 'malagasy', 'malay', 'malayalam', 'maltese', 'maori', 'marathi', 'mongolian', 'myanmar (burmese)', 'nepali', 'norwegian', 'odia', 'pashto', 'persian', 'polish', 'portuguese', 'punjabi', 'romanian', 'russian', 'samoan', 'scots gaelic', 'serbian', 'sesotho', 'shona', 'sindhi', 'sinhala', 'slovak', 'slovenian', 'somali', 'spanish', 'sundanese', 'swahili', 'swedish', 'tajik', 'tamil', 'telugu', 'thai', 'turkish', 'ukrainian', 'urdu', 'uyghur', 'uzbek', 'vietnamese', 'welsh', 'xhosa', 'yiddish', 'yoruba', 'zulu'])
 
 col1, col2 = st.columns(2)
@@ -321,7 +248,6 @@ with col1:
 
             segments.clear()
 
-            # --------------------without chunk starts--------------------------------------------------
             filename = f"chunk.wav"
             audio.export(filename, format="wav")
             with open(filename, "rb") as file:
@@ -337,65 +263,14 @@ with col1:
             for seg in translation_segment:
                 # st.write(seg['text'])
                 seg['text']=translate_text(seg['text'], selected_lang_tar)
-                # seg['start']=seg['start']+((chunk_duration_ms/1000)*i)
-                # seg['end']=seg['end']+((chunk_duration_ms/1000)*i)
+                
 
             segments=adjust_segments(translation_segment)
-            # st.write(segments)
-            # --------------------without chunk ends--------------------------------------------------
-
-            # #----------------------------------chunk wise start----------------------------------------------------------
-
-            # segments.clear()
-            # # Process each chunk
-            # for i, chunk in enumerate(chunks):
-            #     # Save the chunk to a temporary file
-            #     chunk_filename = f"chunk_{i}.wav"
-            #     chunk.export(chunk_filename, format="wav")
-
-            #     # Transcribe the chunk using Groq API
-            #     with open(chunk_filename, "rb") as file:
-            #         transcription = client.audio.transcriptions.create(
-            #             file=(chunk_filename, file.read()),  # Required audio file
-            #             model="whisper-large-v3",  # Required model for transcription
-            #             prompt="Transcribe",
-            #             response_format="json",  # Optional
-            #             temperature=0.0  # Optional
-            #         )
-            #     # Append the chunk transcription to full transcription
-            #     chunk_transcription_text = transcription.text
-            #     full_transcription += chunk_transcription_text + " "
-
-            #     # chunk_translation = lt.translate(transcription.text, source=selected_lang_src, target=selected_lang_tar)
-            #     chunk_translation = translate_text(chunk_transcription_text, selected_lang_tar)
-            #     full_translation += chunk_translation + " "
-
-            #     # Append segment with timings and translated text
-            #     segments.append({
-            #         "start": i * 30,  # Start time in seconds
-            #         "end": (i + 1) * 30,  # End time in seconds
-            #         "translated_text": chunk_translation
-            #     })
             
-            #     # # Show progress on the frontend
-            #     # st.write(f"Processed chunk {i+1}/{len(chunks)}")
-            #     # st.audio(chunk_filename, format="wav") 
-            #     # st.write(f"Chunk Transcription: {chunk_transcription_text}")
-            #     # st.write(f"Chunk Translation: {chunk_translation}")
-
-            # #----------------------------------chunk wise end----------------------------------------------------------
-
             # Save segments to file
             with open(segment_file, "w") as f:
                 json.dump(segments, f)
 
-            # display_subtitles(audio_path, segments)
-
-            # # Show the final combined transcription and translation
-            # st.write("Final Transcription:")
-            # st.write(full_transcription)
-            # st.write(f"Final Translatation:")
-            # st.write(full_translation)
         else:
             st.error("Please upload an audio file.")
 
@@ -425,7 +300,6 @@ with col2:
 
             segments.clear()
 
-            # --------------------without chunk starts--------------------------------------------------
             filename = f"chunk.wav"
             audio.export(filename, format="wav")
             with open(filename, "rb") as file:
@@ -441,64 +315,14 @@ with col2:
             for seg in translation_segment:
                 # st.write(seg['text'])
                 seg['text']=translate_text(seg['text'], selected_lang_tar)
-                # seg['start']=seg['start']+((chunk_duration_ms/1000)*i)
-                # seg['end']=seg['end']+((chunk_duration_ms/1000)*i)
+                
 
             segments=adjust_segments(translation_segment)
-            # --------------------without chunk ends--------------------------------------------------
-
-            # #----------------------------------chunk wise start----------------------------------------------------------
-
-            # segments.clear()
-            # # Process each chunk
-            # for i, chunk in enumerate(chunks):
-            #     # Save the chunk to a temporary file
-            #     chunk_filename = f"chunk_{i}.wav"
-            #     chunk.export(chunk_filename, format="wav")
-
-            #     # Transcribe the chunk using Groq API
-            #     with open(chunk_filename, "rb") as file:
-            #         transcription = client.audio.transcriptions.create(
-            #             file=(chunk_filename, file.read()),  # Required audio file
-            #             model="whisper-large-v3",  # Required model for transcription
-            #             prompt="Transcribe",
-            #             response_format="json",  # Optional
-            #             temperature=0.0  # Optional
-            #         )
-            #     # Append the chunk transcription to full transcription
-            #     chunk_transcription_text = transcription.text
-            #     full_transcription += chunk_transcription_text + " "
-
-            #     # chunk_translation = lt.translate(transcription.text, source=selected_lang_src, target=selected_lang_tar)
-            #     chunk_translation = translate_text(chunk_transcription_text, selected_lang_tar)
-            #     full_translation += chunk_translation + " "
-
-            #     # Append segment with timings and translated text
-            #     segments.append({
-            #         "start": i * 30,  # Start time in seconds
-            #         "end": (i + 1) * 30,  # End time in seconds
-            #         "translated_text": chunk_translation
-            #     })
-            
-            #     # # Show progress on the frontend
-            #     # st.write(f"Processed chunk {i+1}/{len(chunks)}")
-            #     # st.audio(chunk_filename, format="wav") 
-            #     # st.write(f"Chunk Transcription: {chunk_transcription_text}")
-            #     # st.write(f"Chunk Translation: {chunk_translation}")
-
-            # #----------------------------------chunk wise end----------------------------------------------------------
             
             # Save segments to file
             with open(segment_file, "w") as f:
                 json.dump(segments, f)
-            # display_subtitles(audio_path, segments)
-
-            # # Show the final combined transcription and translation
-            # st.write("Final Transcription:")
-            # st.write(full_transcription)
-
-            # st.write(f"Final Translation:")
-            # st.write(full_translation)
+            
         else:
             st.error("Please upload an audio file.")
 
@@ -506,8 +330,23 @@ if st.button("Play Audio with Subtitles"):
     if os.path.exists(segment_file):
         with open(segment_file, "r") as f:
             segments = json.load(f)
-        # st.write("Segments loaded:", segments)
-        # Call your subtitle simulation function here
+        
         display_subtitles("temp_audio_file", segments)
+    else:
+        st.error("No segments file found. Please process an audio file first.")
+
+if st.button("Download Subtitle JSON file"):
+    # Inside your Streamlit layout
+    if os.path.exists(segment_file):
+        # Provide the download button if the segments file exists
+        with open(segment_file, "r") as f:
+            segments = json.load(f)
+        
+        st.download_button(
+            label="Download Segments JSON",
+            data=json.dumps(segments),  # Convert the segments dictionary to JSON
+            file_name="segments.json",  # The name of the file the user will download
+            mime="application/json"  # MIME type for JSON
+        )
     else:
         st.error("No segments file found. Please process an audio file first.")
