@@ -335,18 +335,17 @@ if st.button("Play Audio with Subtitles"):
     else:
         st.error("No segments file found. Please process an audio file first.")
 
-if st.button("Download Subtitle JSON file"):
-    # Inside your Streamlit layout
-    if os.path.exists(segment_file):
-        # Provide the download button if the segments file exists
-        with open(segment_file, "r") as f:
-            segments = json.load(f)
-        
-        st.download_button(
-            label="Download Segments JSON",
-            data=json.dumps(segments),  # Convert the segments dictionary to JSON
-            file_name="segments.json",  # The name of the file the user will download
-            mime="application/json"  # MIME type for JSON
-        )
-    else:
-        st.error("No segments file found. Please process an audio file first.")
+# Inside your Streamlit layout
+if os.path.exists(segment_file):
+    # Provide the download button if the segments file exists
+    with open(segment_file, "r") as f:
+        segments = json.load(f)
+    
+    st.download_button(
+        label="Download Segments JSON",
+        data=json.dumps(segments),  # Convert the segments dictionary to JSON
+        file_name="segments.json",  # The name of the file the user will download
+        mime="application/json"  # MIME type for JSON
+    )
+else:
+    st.error("No segments file found. Please process an audio file first.")
