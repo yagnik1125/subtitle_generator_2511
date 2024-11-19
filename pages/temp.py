@@ -227,6 +227,8 @@ segment_file="segments.json"
 # Variables to store full transcription and translation
 full_transcription = ""
 full_translation = ""
+full_translation_file="full_translation.txt"
+
 with col1:
     if st.button("Audio 2 Text for Uploaded Audio"):
         # st.write("Processing uploaded file...")
@@ -259,10 +261,18 @@ with col1:
                 )
             transcription_segment=transcription.segments
             translation_segment=copy.deepcopy(transcription_segment)
-            for seg in translation_segment:
-                # st.write(seg['text'])
-                seg['text']=translate_text(seg['text'], selected_lang_tar)
-                full_translation += seg['text'] + "\n"
+
+            # for seg in translation_segment:
+            #     # st.write(seg['text'])
+            #     seg['text']=translate_text(seg['text'], selected_lang_tar)
+            #     full_translation += seg['text'] + "\n"
+            # Open 'full_translation.txt' for writing/creating the file
+            with open('full_translation.txt', 'w') as full_translation_file:
+                for seg in translation_segment:
+                    # Translate the text and write to the file
+                    seg['text'] = translate_text(seg['text'], selected_lang_tar)
+                    if seg['text']:
+                        full_translation_file.write(seg['text'] + "\n")
                 
 
             segments=adjust_segments(translation_segment)
@@ -350,25 +360,27 @@ if st.button("Play Audio with Subtitles"):
 
 
 # Add a button to download the full translation as a text file
+if os.path.exists('full_translation.txt'):
+    with open('full_translation.txt', 'r') as file:
+        full_translation_content = file.read()
+
+    st.download_button(
+        label="Download Full Translation (TXT)",
+        data=full_translation_content,  # Use the file content as the download data
+        file_name="full_translation.txt",  # The name of the file the user will download
+        mime="text/plain"  # MIME type for plain text files
+    )
+
+# Add a button to download the segments as JSON
 if os.path.exists(segment_file):
-    # Provide the download button if the segments file exists
     with open(segment_file, "r") as f:
         segments = json.load(f)
     
-    # Button to download segments.json
     st.download_button(
         label="Download Segments JSON",
         data=json.dumps(segments),  # Convert the segments dictionary to JSON
         file_name="segments.json",  # The name of the file the user will download
         mime="application/json"  # MIME type for JSON
-    )
-
-    # Button to download the full translation as a text file
-    st.download_button(
-        label="Download Full Translation (TXT)",
-        data=full_translation,  # Use the full_translation string as the file content
-        file_name="full_translation.txt",  # The name of the text file
-        mime="text/plain"  # MIME type for plain text files
     )
 else:
     st.error("No segments file found. Please process an audio file first.")
