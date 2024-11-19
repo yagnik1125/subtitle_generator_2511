@@ -215,10 +215,10 @@ def display_subtitles(audio_path, transcription_segment,translation_segment, aut
     # Simulate subtitle display
     for i in range(len(translation_segment)):
         placeholder.markdown(
-            f"<h5 style='text-align: center; color: green;'>{transcription_segment['text']}</h5><br><h5 style='text-align: center; color: green;'>{translation_segment['text']}</h5>",
+            f"<h5 style='text-align: center; color: green;'>{transcription_segment[i]['text']}</h5><br><h5 style='text-align: center; color: green;'>{translation_segment[i]['text']}</h5>",
             unsafe_allow_html=True,
         )
-        time.sleep(transcription_segment["end"] - transcription_segment["start"])  # Wait for the duration of the segment
+        time.sleep(transcription_segment[i]["end"] - transcription_segment[i]["start"])  # Wait for the duration of the segment
     placeholder.empty()  # Clear the subtitle at the end
 
 def adjust_segments(segments):
@@ -372,7 +372,7 @@ with col2:
 
 if st.button("Play Audio with Subtitles"):
     if os.path.exists(transcription_segment_file) and os.path.exists(translation_segment_file):
-        transcription_segment,translation_segment
+        transcription_segment,translation_segment = [],[]
         with open(transcription_segment_file, "r") as f:
             transcription_segment = json.load(f)
         with open(translation_segment_file, "r") as f:
