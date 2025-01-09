@@ -17,7 +17,7 @@ import json
 import base64
 
 # Initialize the Groq client
-client = Groq(api_key="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")
+client = Groq(api_key="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")
 
 
 # Streamlit frontend for audio input and translation
